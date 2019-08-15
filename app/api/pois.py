@@ -25,10 +25,27 @@ def get_pois():
 @bp.route('/pois', methods=['POST'])
 @token_auth.login_required
 def create_poi():
-    pass
+    data = request.get_json() or {}
+    if 'name' not in data or 'lat' not in data or 'lng' not in data:
+        return bad_request('must include name, lat, and lng fields')
+    if POI.query.filter_by(name=data['name']).first():
+        return bad_request('please use a different name')
+    poi = POI()
+    poi.from_dict(data)
+    db.session.add(poi)
+    db.session.commit()
+    response = jsonify(poi.to_dict())
+    response.status_code = 201
+    response.headers['Location'] = url_for('api.get_poi', id=poi.id)
+    return response
 
     
 
-@bp.route('/poi/<int:id>', methods=['PUT'])
-def update_poi():
-    pass
+@bp.route('/pois/<int:id>', methods=['PUT'])
+@token_auth.login_required
+def update_poi(id):
+    poi = POI.query.get_or_404(id)
+    data = request.get_json() or {}
+    poi.from_dict(data)
+    db.session.commit()
+    return jsonify(poi.to_dict())
