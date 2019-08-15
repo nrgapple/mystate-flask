@@ -43,11 +43,11 @@ def create_user():
 @bp.route('/users/<int:id>', methods=['PUT'])
 @token_auth.login_required
 def update_user(id):
-    if g.create_user.id != id:
+    if g.current_user.id != id:
         abort(403)
     user = User.query.get_or_404(id)
     data = request.get_json() or {}
-    if 'username' in data and data['username'] != nuser.username and \
+    if 'username' in data and data['username'] != user.username and \
             User.query.filter_by(username=data['username']).first():
         return bad_request('please use a different username')
     if 'email' in data and data['email'] != user.email and \
